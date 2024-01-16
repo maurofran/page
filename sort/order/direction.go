@@ -12,15 +12,13 @@ var ErrInvalidDirection = errors.New("invalid direction")
 type Direction int
 
 const (
-	DirectionNone Direction = iota
-	DirectionAsc
+	DirectionAsc Direction = iota
 	DirectionDesc
 )
 
 const defaultDirection = DirectionAsc
 
 var directions = [...]string{
-	"",
 	"ASC",
 	"DESC",
 }
@@ -33,7 +31,7 @@ func ParseDirection(value string) (Direction, error) {
 			return Direction(i), nil
 		}
 	}
-	return DirectionNone, fmt.Errorf("%w: value %q", ErrInvalidDirection, value)
+	return DirectionAsc, fmt.Errorf("%w: value %q", ErrInvalidDirection, value)
 }
 
 // IsAscending returns whether the direction is ascending.

@@ -4,9 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/maurofran/page/sort"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 var ErrUnpaged = errors.New("request is unpaged")
+
+const pageParam = "page"
+const sizeParam = "size"
+const sortParam = "sort"
 
 // Unpaged returns a Request instance representing no pagination setup.
 func Unpaged(sorts ...*sort.Sort) Request {
@@ -24,6 +31,119 @@ func RequestOfSize(size uint) Request {
 // UnsortedRequestOf creates a new Request for given page and size.
 func UnsortedRequestOf(page, size uint) Request {
 	return RequestOf(page, size, sort.Unsorted())
+}
+
+type parseOptions struct {
+	pageParam   string
+	sizeParam   string
+	sortParam   string
+	defaultPage uint
+	defaultSize uint
+	defaultSort *sort.Sort
+}
+
+// ParseOption is the type for function used to customize the RequestFrom behavior
+type ParseOption func(*parseOptions) error
+
+// WithPageParam is the option used to provide the page param.
+func WithPageParam(param string) ParseOption {
+	return func(options *parseOptions) error {
+		if param = strings.TrimSpace(param); param != "" {
+			options.pageParam = param
+			return nil
+		}
+		return errors.New("invalid page param")
+	}
+}
+
+// WithSizeParam is the option used to provide the size param.
+func WithSizeParam(param string) ParseOption {
+	return func(options *parseOptions) error {
+		if param = strings.TrimSpace(param); param != "" {
+			options.sizeParam = param
+			return nil
+		}
+		return errors.New("invalid size param")
+	}
+}
+
+// WithSortParam is the option used to provide the sort param.
+func WithSortParam(param string) ParseOption {
+	return func(options *parseOptions) error {
+		if param = strings.TrimSpace(param); param != "" {
+			options.sortParam = param
+			return nil
+		}
+		return errors.New("invalid sort param")
+	}
+}
+
+// WithDefaultPage is the option used to provide the default page number.
+func WithDefaultPage(page uint) ParseOption {
+	return func(options *parseOptions) error {
+		options.defaultPage = page
+		return nil
+	}
+}
+
+// WithDefaultSize is the option used to provide the default size.
+func WithDefaultSize(size uint) ParseOption {
+	return func(options *parseOptions) error {
+		options.defaultSize = size
+		return nil
+	}
+}
+
+// WithDefaultSort is the option used to provide the default sort order.
+func WithDefaultSort(sorts ...string) ParseOption {
+	return func(options *parseOptions) error {
+		var err error
+		options.defaultSort, err = sort.Parse(sorts...)
+		return err
+	}
+}
+
+// RequestFrom parses an http.Request query into a Request.
+func RequestFrom(httpReq *http.Request, options ...ParseOption) (Request, error) {
+	opts := &parseOptions{
+		pageParam:   "page",
+		sizeParam:   "size",
+		sortParam:   "sort",
+		defaultPage: 0,
+		defaultSize: 10,
+		defaultSort: nil,
+	}
+	for _, option := range options {
+		if err := option(opts); err != nil {
+			return nil, err
+		}
+	}
+	query := httpReq.URL.Query()
+	pageNumber := opts.defaultPage
+	pageSize := opts.defaultSize
+	sortClause := opts.defaultSort
+	if str := query.Get(pageParam); str != "" {
+		value, err := strconv.ParseUint(str, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		pageNumber = uint(value)
+	}
+	if str := query.Get(sizeParam); str != "" {
+		value, err := strconv.ParseUint(str, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		pageSize = uint(value)
+	}
+	if sorts, ok := query[sortParam]; ok && len(sorts) > 0 {
+		value, err := sort.Parse(sorts...)
+		if err != nil {
+			return nil, err
+		}
+		sortClause = value
+	}
+	return RequestOf(pageNumber, pageSize, sortClause), nil
 }
 
 // RequestOf creates a new Request for given page and size and sort.

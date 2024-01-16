@@ -1,7 +1,9 @@
 package order
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -25,6 +27,29 @@ func New(direction Direction, properties ...string) []Order {
 		}
 	}
 	return orders
+}
+
+// Parse an Order formatted string
+func Parse(data string) (Order, error) {
+	var err error
+	var order Order
+	parts := strings.Split(data, ",")
+	switch len(parts) {
+	case 4:
+		order.nullHandling, err = ParseNullHandling(parts[3])
+		fallthrough
+	case 3:
+		order.ignoreCase, err = strconv.ParseBool(parts[2])
+		fallthrough
+	case 2:
+		order.direction, err = ParseDirection(parts[1])
+		fallthrough
+	case 1:
+		order.property = parts[0]
+	default:
+		err = errors.New("cannot parse empty string")
+	}
+	return order, err
 }
 
 // By creates a new Order instance with default sort direction.
@@ -150,6 +175,32 @@ func (o Order) NullsLast() Order {
 // NullsNative returns a new Order with NullHandlingNative NullHandling.
 func (o Order) NullsNative() Order {
 	return o.WithNullHandling(NullHandlingNative)
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (o Order) MarshalJSON() ([]byte, error) {
+	var result strings.Builder
+	result.WriteString(o.property)
+	if o.direction != DirectionAsc || o.ignoreCase || o.nullHandling != NullHandlingNative {
+		result.WriteString(",")
+		result.WriteString(o.direction.String())
+	}
+	if o.ignoreCase || o.nullHandling != NullHandlingNative {
+		result.WriteString(",")
+		result.WriteString(strconv.FormatBool(o.ignoreCase))
+	}
+	if o.nullHandling != NullHandlingNative {
+		result.WriteString(",")
+		result.WriteString(o.nullHandling.String())
+	}
+	return []byte(result.String()), nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (o *Order) UnmarshalJSON(data []byte) error {
+	var err error
+	*o, err = Parse(string(data))
+	return err
 }
 
 func (o Order) String() string {

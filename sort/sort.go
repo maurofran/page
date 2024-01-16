@@ -1,6 +1,7 @@
 package sort
 
 import (
+	"encoding/json"
 	"github.com/maurofran/page/sort/order"
 	"strings"
 )
@@ -22,6 +23,22 @@ func New(direction order.Direction, properties ...string) *Sort {
 		return Unsorted()
 	}
 	return &Sort{orders: order.New(direction, properties...)}
+}
+
+// Parse zero or more sort clauses for a Sort instance.
+func Parse(values ...string) (*Sort, error) {
+	if len(values) == 0 {
+		return Unsorted(), nil
+	}
+	orders := make([]order.Order, len(values))
+	for i, str := range values {
+		o, err := order.Parse(str)
+		if err != nil {
+			return nil, err
+		}
+		orders[i] = o
+	}
+	return ByOrder(orders...), nil
 }
 
 // By creates a new Sort with provided properties.
@@ -97,6 +114,16 @@ func (s *Sort) OrderFor(property string) (order.Order, bool) {
 // Orders gets the slice of orders.
 func (s *Sort) Orders() []order.Order {
 	return s.orders
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (s *Sort) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.orders)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface,
+func (s *Sort) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &s.orders)
 }
 
 // String implements the fmt.Stringer interface.
