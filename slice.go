@@ -26,17 +26,17 @@ type Slice[T any] interface {
 	// HasPrevious returns if there is a previous Slice.
 	HasPrevious() bool
 	// Request returns the Request that's been used to reques the current Slice.
-	Request() Request // TODO PageRequest.of(Number(), Size(), Sort())
-	// NextPageable returns the Request to request the next Slice. Can be Unpaged in case the current Slice is
+	Request() Request
+	// NextRequest returns the Request to request the next Slice. Can be Unpaged in case the current Slice is
 	// already the last one. Clients should check HasNext before calling this method.
-	NextPageable() Request
-	// PreviousPageable returns the Request to request the previous Slice. Can be Unpaged in case the current Slice is
+	NextRequest() Request
+	// PreviousRequest returns the Request to request the previous Slice. Can be Unpaged in case the current Slice is
 	// already the first one. Clients should check HasPrevious before calling this method.
-	PreviousPageable() Request
-	// NextOrLastPageable returns the Request describing the next Slice or the one describing the current slice in case
+	PreviousRequest() Request
+	// NextOrLastRequest returns the Request describing the next Slice or the one describing the current slice in case
 	// it's the last one.
-	NextOrLastPageable() Request // TODO HasNext() ? NextPageable() : Request()
-	// PreviousOrFirstPageable returns the Request describing the previous Slice or the one describing the current
+	NextOrLastRequest() Request
+	// PreviousOrFirstRequest returns the Request describing the previous Slice or the one describing the current
 	// slice in case it's the first one.
-	PreviousOrFirstPageable() Request // TODO HasPrevious() ? PreviousPageable() : Request()
+	PreviousOrFirstRequest() Request
 }

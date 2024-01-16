@@ -61,30 +61,30 @@ func (c *chunk[T]) Request() Request {
 	return c.request
 }
 
-func (c *chunk[T]) NextPageable() Request {
+func (c *chunk[T]) NextRequest() Request {
 	if c.HasNext() {
 		return c.request.Next()
 	}
 	return Unpaged(c.Sort())
 }
 
-func (c *chunk[T]) PreviousPageable() Request {
+func (c *chunk[T]) PreviousRequest() Request {
 	if c.HasPrevious() {
 		return c.request.PreviousOrFirst()
 	}
 	return Unpaged(c.Sort())
 }
 
-func (c *chunk[T]) NextOrLastPageable() Request {
+func (c *chunk[T]) NextOrLastRequest() Request {
 	if c.HasNext() {
-		return c.NextPageable()
+		return c.NextRequest()
 	}
 	return c.Request()
 }
 
-func (c *chunk[T]) PreviousOrFirstPageable() Request {
+func (c *chunk[T]) PreviousOrFirstRequest() Request {
 	if c.HasPrevious() {
-		return c.PreviousPageable()
+		return c.PreviousRequest()
 	}
 	return c.Request()
 }
