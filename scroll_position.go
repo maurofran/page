@@ -8,7 +8,7 @@ type OffsetScrollPosition uint
 
 // OffsetScrollPositionOf creates a new OffsetScrollPosition from an offset.
 func OffsetScrollPositionOf(offset uint) OffsetScrollPosition {
-	return OffsetScrollPositionOf(offset)
+	return OffsetScrollPosition(offset)
 }
 
 // Offset gets the zero or positive offset.

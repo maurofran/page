@@ -11,10 +11,6 @@ import (
 
 var ErrUnpaged = errors.New("request is unpaged")
 
-const pageParam = "page"
-const sizeParam = "size"
-const sortParam = "sort"
-
 // Unpaged returns a Request instance representing no pagination setup.
 func Unpaged(sorts ...*sort.Sort) Request {
 	if len(sorts) == 0 {
@@ -25,12 +21,7 @@ func Unpaged(sorts ...*sort.Sort) Request {
 
 // RequestOfSize creates a new Request for the first page (page number 0) given size.
 func RequestOfSize(size uint) Request {
-	return UnsortedRequestOf(0, size)
-}
-
-// UnsortedRequestOf creates a new Request for given page and size.
-func UnsortedRequestOf(page, size uint) Request {
-	return RequestOf(page, size, sort.Unsorted())
+	return RequestOf(0, size)
 }
 
 type parseOptions struct {
@@ -122,21 +113,21 @@ func RequestFrom(httpReq *http.Request, options ...ParseOption) (Request, error)
 	pageNumber := opts.defaultPage
 	pageSize := opts.defaultSize
 	sortClause := opts.defaultSort
-	if str := query.Get(pageParam); str != "" {
+	if str := query.Get(opts.pageParam); str != "" {
 		value, err := strconv.ParseUint(str, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		pageNumber = uint(value)
 	}
-	if str := query.Get(sizeParam); str != "" {
+	if str := query.Get(opts.sizeParam); str != "" {
 		value, err := strconv.ParseUint(str, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		pageSize = uint(value)
 	}
-	if sorts, ok := query[sortParam]; ok && len(sorts) > 0 {
+	if sorts, ok := query[opts.sortParam]; ok && len(sorts) > 0 {
 		value, err := sort.Parse(sorts...)
 		if err != nil {
 			return nil, err
@@ -147,11 +138,15 @@ func RequestFrom(httpReq *http.Request, options ...ParseOption) (Request, error)
 }
 
 // RequestOf creates a new Request for given page and size and sort.
-func RequestOf(page, size uint, sort *sort.Sort) Request {
+func RequestOf(page, size uint, sorting ...*sort.Sort) Request {
+	var s *sort.Sort
+	if len(sorting) > 0 {
+		s = sorting[0]
+	}
 	return request{
 		page: page,
 		size: size,
-		sort: sort,
+		sort: s,
 	}
 }
 
