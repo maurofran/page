@@ -13,10 +13,10 @@ func TestParseHandling(t *testing.T) {
 		expected null.Handling
 		err      error
 	}{
-		"native":      {"native", null.HandlingNative, nil},
-		"nulls_first": {"nulls_first", null.HandlingNullsFirst, nil},
-		"nulls_last":  {"nulls_last", null.HandlingNullsLast, nil},
-		"invalid":     {"invalid", null.HandlingNative, null.ErrInvalidHandling},
+		"native":      {"native", null.Native, nil},
+		"nulls_first": {"nulls_first", null.First, nil},
+		"nulls_last":  {"nulls_last", null.Last, nil},
+		"invalid":     {"invalid", null.Native, null.ErrInvalidHandling},
 	}
 
 	for name, test := range tests {
@@ -33,9 +33,9 @@ func TestNullHandling_MarshalText(t *testing.T) {
 		fixture  null.Handling
 		expected string
 	}{
-		"native":      {null.HandlingNative, `"NATIVE"`},
-		"nulls_first": {null.HandlingNullsFirst, `"NULLS_FIRST"`},
-		"nulls_last":  {null.HandlingNullsLast, `"NULLS_LAST"`},
+		"native":      {null.Native, `"NATIVE"`},
+		"nulls_first": {null.First, `"NULLS_FIRST"`},
+		"nulls_last":  {null.Last, `"NULLS_LAST"`},
 	}
 
 	for name, test := range tests {
@@ -53,10 +53,10 @@ func TestNullHandling_UnmarshalText(t *testing.T) {
 		expected null.Handling
 		err      error
 	}{
-		"native":      {`"NATIVE"`, null.HandlingNative, nil},
-		"nulls_first": {`"NULLS_FIRST"`, null.HandlingNullsFirst, nil},
-		"nulls_last":  {`"NULLS_LAST"`, null.HandlingNullsLast, nil},
-		"invalid":     {`"INVALID"`, null.HandlingNative, null.ErrInvalidHandling},
+		"native":      {`"NATIVE"`, null.Native, nil},
+		"nulls_first": {`"NULLS_FIRST"`, null.First, nil},
+		"nulls_last":  {`"NULLS_LAST"`, null.Last, nil},
+		"invalid":     {`"INVALID"`, null.Native, null.ErrInvalidHandling},
 	}
 
 	for name, test := range tests {

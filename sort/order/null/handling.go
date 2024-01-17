@@ -12,12 +12,12 @@ var ErrInvalidHandling = errors.New("invalid null handling")
 type Handling int
 
 const (
-	HandlingNative Handling = iota
-	HandlingNullsFirst
-	HandlingNullsLast
+	Native Handling = iota
+	First
+	Last
 )
 
-const DefaultHandling = HandlingNative
+const DefaultHandling = Native
 
 var handlings = [...]string{
 	"NATIVE",
@@ -33,7 +33,7 @@ func ParseHandling(value string) (Handling, error) {
 			return Handling(i), nil
 		}
 	}
-	return HandlingNative, fmt.Errorf("%w: value %q", ErrInvalidHandling, value)
+	return Native, fmt.Errorf("%w: value %q", ErrInvalidHandling, value)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.

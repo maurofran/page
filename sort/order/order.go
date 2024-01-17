@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/maurofran/page/sort/order/direction"
 	"github.com/maurofran/page/sort/order/null"
-	"strconv"
 	"strings"
 )
+
+// ErrParse is the error returned when an order cannot be parsed.
+var ErrParse = errors.New("order parse error")
 
 // Order implements the pairing of a Direction and a property. It is used to provide input for Sort.
 type Order struct {
@@ -35,21 +37,23 @@ func New(direction direction.Direction, properties ...string) []Order {
 func Parse(data string) (Order, error) {
 	var err error
 	var order Order
+	data = strings.TrimSpace(data)
+	if data == "" {
+		return order, fmt.Errorf("%w: empty string", ErrParse)
+	}
 	parts := strings.Split(data, ",")
-	switch len(parts) {
-	case 4:
+	count := len(parts)
+	if count >= 4 {
 		order.nullHandling, err = null.ParseHandling(parts[3])
-		fallthrough
-	case 3:
-		order.ignoreCase, err = strconv.ParseBool(parts[2])
-		fallthrough
-	case 2:
+	}
+	if count >= 3 {
+		order.ignoreCase = parts[2] == "ignore_case"
+	}
+	if count >= 2 {
 		order.direction, err = direction.Parse(parts[1])
-		fallthrough
-	case 1:
+	}
+	if count >= 1 {
 		order.property = parts[0]
-	default:
-		err = errors.New("cannot parse empty string")
 	}
 	return order, err
 }
@@ -164,42 +168,41 @@ func (o Order) WithNullHandling(nullHandling null.Handling) Order {
 	}
 }
 
-// NullsFirst returns a new Order with HandlingNullsFirst NullHandling.
+// NullsFirst returns a new Order with First NullHandling.
 func (o Order) NullsFirst() Order {
-	return o.WithNullHandling(null.HandlingNullsFirst)
+	return o.WithNullHandling(null.First)
 }
 
-// NullsLast returns a new Order with HandlingNullsLast NullHandling.
+// NullsLast returns a new Order with Last NullHandling.
 func (o Order) NullsLast() Order {
-	return o.WithNullHandling(null.HandlingNullsLast)
+	return o.WithNullHandling(null.Last)
 }
 
-// NullsNative returns a new Order with HandlingNative NullHandling.
+// NullsNative returns a new Order with Native NullHandling.
 func (o Order) NullsNative() Order {
-	return o.WithNullHandling(null.HandlingNative)
+	return o.WithNullHandling(null.Native)
 }
 
-// MarshalJSON implements the json.Marshaler interface.
-func (o Order) MarshalJSON() ([]byte, error) {
+// MarshalText implements the encoding.TextMarshaler interface.
+func (o Order) MarshalText() ([]byte, error) {
 	var result strings.Builder
 	result.WriteString(o.property)
-	if o.direction != direction.Asc || o.ignoreCase || o.nullHandling != null.HandlingNative {
+	if o.direction != direction.Asc || o.ignoreCase || o.nullHandling != null.Native {
 		result.WriteString(",")
 		result.WriteString(o.direction.String())
 	}
-	if o.ignoreCase || o.nullHandling != null.HandlingNative {
-		result.WriteString(",")
-		result.WriteString(strconv.FormatBool(o.ignoreCase))
+	if o.ignoreCase || o.nullHandling != null.Native {
+		result.WriteString(",ignore_case")
 	}
-	if o.nullHandling != null.HandlingNative {
+	if o.nullHandling != null.Native {
 		result.WriteString(",")
 		result.WriteString(o.nullHandling.String())
 	}
 	return []byte(result.String()), nil
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (o *Order) UnmarshalJSON(data []byte) error {
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (o *Order) UnmarshalText(data []byte) error {
 	var err error
 	*o, err = Parse(string(data))
 	return err
@@ -208,7 +211,7 @@ func (o *Order) UnmarshalJSON(data []byte) error {
 func (o Order) String() string {
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("%s: %s", o.property, o.direction))
-	if o.nullHandling != null.HandlingNative {
+	if o.nullHandling != null.Native {
 		result.WriteString(", ")
 		result.WriteString(o.nullHandling.String())
 	}
