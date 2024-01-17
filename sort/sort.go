@@ -136,5 +136,5 @@ func (s *Sort) String() string {
 	for i, o := range s.orders {
 		parts[i] = o.String()
 	}
-	return strings.Join(parts, ",")
+	return strings.Join(parts, ", ")
 }
