@@ -3,6 +3,8 @@ package order
 import (
 	"errors"
 	"fmt"
+	"github.com/maurofran/page/sort/order/direction"
+	"github.com/maurofran/page/sort/order/null"
 	"strconv"
 	"strings"
 )
@@ -10,20 +12,20 @@ import (
 // Order implements the pairing of a Direction and a property. It is used to provide input for Sort.
 type Order struct {
 	property     string
-	direction    Direction
+	direction    direction.Direction
 	ignoreCase   bool
-	nullHandling NullHandling
+	nullHandling null.Handling
 }
 
 // New creates a new Order slice for provided Direction and properties.
-func New(direction Direction, properties ...string) []Order {
+func New(direction direction.Direction, properties ...string) []Order {
 	orders := make([]Order, len(properties))
 	for i, property := range properties {
 		orders[i] = Order{
 			property:     property,
 			direction:    direction,
 			ignoreCase:   false,
-			nullHandling: defaultNullHandling,
+			nullHandling: null.DefaultHandling,
 		}
 	}
 	return orders
@@ -36,13 +38,13 @@ func Parse(data string) (Order, error) {
 	parts := strings.Split(data, ",")
 	switch len(parts) {
 	case 4:
-		order.nullHandling, err = ParseNullHandling(parts[3])
+		order.nullHandling, err = null.ParseHandling(parts[3])
 		fallthrough
 	case 3:
 		order.ignoreCase, err = strconv.ParseBool(parts[2])
 		fallthrough
 	case 2:
-		order.direction, err = ParseDirection(parts[1])
+		order.direction, err = direction.Parse(parts[1])
 		fallthrough
 	case 1:
 		order.property = parts[0]
@@ -56,9 +58,9 @@ func Parse(data string) (Order, error) {
 func By(property string) Order {
 	return Order{
 		property:     property,
-		direction:    defaultDirection,
+		direction:    direction.Default,
 		ignoreCase:   false,
-		nullHandling: defaultNullHandling,
+		nullHandling: null.DefaultHandling,
 	}
 }
 
@@ -66,9 +68,9 @@ func By(property string) Order {
 func Asc(property string) Order {
 	return Order{
 		property:     property,
-		direction:    DirectionAsc,
+		direction:    direction.Asc,
 		ignoreCase:   false,
-		nullHandling: defaultNullHandling,
+		nullHandling: null.DefaultHandling,
 	}
 }
 
@@ -76,9 +78,9 @@ func Asc(property string) Order {
 func Desc(property string) Order {
 	return Order{
 		property:     property,
-		direction:    DirectionDesc,
+		direction:    direction.Desc,
 		ignoreCase:   false,
-		nullHandling: defaultNullHandling,
+		nullHandling: null.DefaultHandling,
 	}
 }
 
@@ -88,7 +90,7 @@ func (o Order) Property() string {
 }
 
 // Direction returns the direction to order by.
-func (o Order) Direction() Direction {
+func (o Order) Direction() direction.Direction {
 	return o.direction
 }
 
@@ -108,12 +110,12 @@ func (o Order) IsIgnoreCase() bool {
 }
 
 // NullHandling returns the null handling.
-func (o Order) NullHandling() NullHandling {
+func (o Order) NullHandling() null.Handling {
 	return o.nullHandling
 }
 
 // With returns a new Order with given Direction
-func (o Order) With(direction Direction) Order {
+func (o Order) With(direction direction.Direction) Order {
 	return Order{
 		property:     o.property,
 		direction:    direction,
@@ -153,7 +155,7 @@ func (o Order) IgnoreCase() Order {
 }
 
 // WithNullHandling returns a new Order with provided NullHandling.
-func (o Order) WithNullHandling(nullHandling NullHandling) Order {
+func (o Order) WithNullHandling(nullHandling null.Handling) Order {
 	return Order{
 		property:     o.property,
 		direction:    o.direction,
@@ -162,34 +164,34 @@ func (o Order) WithNullHandling(nullHandling NullHandling) Order {
 	}
 }
 
-// NullsFirst returns a new Order with NullHandlingNullsFirst NullHandling.
+// NullsFirst returns a new Order with HandlingNullsFirst NullHandling.
 func (o Order) NullsFirst() Order {
-	return o.WithNullHandling(NullHandlingNullsFirst)
+	return o.WithNullHandling(null.HandlingNullsFirst)
 }
 
-// NullsLast returns a new Order with NullHandlingNullsLast NullHandling.
+// NullsLast returns a new Order with HandlingNullsLast NullHandling.
 func (o Order) NullsLast() Order {
-	return o.WithNullHandling(NullHandlingNullsLast)
+	return o.WithNullHandling(null.HandlingNullsLast)
 }
 
-// NullsNative returns a new Order with NullHandlingNative NullHandling.
+// NullsNative returns a new Order with HandlingNative NullHandling.
 func (o Order) NullsNative() Order {
-	return o.WithNullHandling(NullHandlingNative)
+	return o.WithNullHandling(null.HandlingNative)
 }
 
 // MarshalJSON implements the json.Marshaler interface.
 func (o Order) MarshalJSON() ([]byte, error) {
 	var result strings.Builder
 	result.WriteString(o.property)
-	if o.direction != DirectionAsc || o.ignoreCase || o.nullHandling != NullHandlingNative {
+	if o.direction != direction.Asc || o.ignoreCase || o.nullHandling != null.HandlingNative {
 		result.WriteString(",")
 		result.WriteString(o.direction.String())
 	}
-	if o.ignoreCase || o.nullHandling != NullHandlingNative {
+	if o.ignoreCase || o.nullHandling != null.HandlingNative {
 		result.WriteString(",")
 		result.WriteString(strconv.FormatBool(o.ignoreCase))
 	}
-	if o.nullHandling != NullHandlingNative {
+	if o.nullHandling != null.HandlingNative {
 		result.WriteString(",")
 		result.WriteString(o.nullHandling.String())
 	}
@@ -206,7 +208,7 @@ func (o *Order) UnmarshalJSON(data []byte) error {
 func (o Order) String() string {
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("%s: %s", o.property, o.direction))
-	if o.nullHandling != NullHandlingNative {
+	if o.nullHandling != null.HandlingNative {
 		result.WriteString(", ")
 		result.WriteString(o.nullHandling.String())
 	}

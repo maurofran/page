@@ -1,8 +1,8 @@
-package order_test
+package direction_test
 
 import (
 	"encoding/json"
-	"github.com/maurofran/page/sort/order"
+	"github.com/maurofran/page/sort/order/direction"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -10,17 +10,17 @@ import (
 func TestParseDirection(t *testing.T) {
 	tests := map[string]struct {
 		value    string
-		expected order.Direction
+		expected direction.Direction
 		err      error
 	}{
-		"asc":     {"asc", order.DirectionAsc, nil},
-		"desc":    {"desc", order.DirectionDesc, nil},
-		"invalid": {"invalid", order.DirectionAsc, order.ErrInvalidDirection},
+		"asc":     {"asc", direction.Asc, nil},
+		"desc":    {"desc", direction.Desc, nil},
+		"invalid": {"invalid", direction.Asc, direction.ErrInvalid},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual, err := order.ParseDirection(test.value)
+			actual, err := direction.Parse(test.value)
 			assert.ErrorIs(t, err, test.err)
 			assert.Equal(t, test.expected, actual)
 		})
@@ -29,11 +29,11 @@ func TestParseDirection(t *testing.T) {
 
 func TestDirection_IsAscending(t *testing.T) {
 	tests := map[string]struct {
-		fixture  order.Direction
+		fixture  direction.Direction
 		expected bool
 	}{
-		"asc":  {order.DirectionAsc, true},
-		"desc": {order.DirectionDesc, false},
+		"asc":  {direction.Asc, true},
+		"desc": {direction.Desc, false},
 	}
 
 	for name, test := range tests {
@@ -45,11 +45,11 @@ func TestDirection_IsAscending(t *testing.T) {
 }
 func TestDirection_IsDescending(t *testing.T) {
 	tests := map[string]struct {
-		fixture  order.Direction
+		fixture  direction.Direction
 		expected bool
 	}{
-		"asc":  {order.DirectionAsc, false},
-		"desc": {order.DirectionDesc, true},
+		"asc":  {direction.Asc, false},
+		"desc": {direction.Desc, true},
 	}
 
 	for name, test := range tests {
@@ -62,11 +62,11 @@ func TestDirection_IsDescending(t *testing.T) {
 
 func TestDirection_Reverse(t *testing.T) {
 	tests := map[string]struct {
-		fixture  order.Direction
-		expected order.Direction
+		fixture  direction.Direction
+		expected direction.Direction
 	}{
-		"asc":  {order.DirectionAsc, order.DirectionDesc},
-		"desc": {order.DirectionDesc, order.DirectionAsc},
+		"asc":  {direction.Asc, direction.Desc},
+		"desc": {direction.Desc, direction.Asc},
 	}
 
 	for name, test := range tests {
@@ -79,11 +79,11 @@ func TestDirection_Reverse(t *testing.T) {
 
 func TestDirection_MarshalText(t *testing.T) {
 	tests := map[string]struct {
-		fixture  order.Direction
+		fixture  direction.Direction
 		expected string
 	}{
-		"asc":  {order.DirectionAsc, `"ASC"`},
-		"desc": {order.DirectionDesc, `"DESC"`},
+		"asc":  {direction.Asc, `"ASC"`},
+		"desc": {direction.Desc, `"DESC"`},
 	}
 
 	for name, test := range tests {
@@ -98,17 +98,17 @@ func TestDirection_MarshalText(t *testing.T) {
 func TestDirection_UnmarshalText(t *testing.T) {
 	tests := map[string]struct {
 		fixture  string
-		expected order.Direction
+		expected direction.Direction
 		err      error
 	}{
-		"asc":     {`"ASC"`, order.DirectionAsc, nil},
-		"desc":    {`"DESC"`, order.DirectionDesc, nil},
-		"invalid": {`"INVALID"`, order.DirectionAsc, order.ErrInvalidDirection},
+		"asc":     {`"ASC"`, direction.Asc, nil},
+		"desc":    {`"DESC"`, direction.Desc, nil},
+		"invalid": {`"INVALID"`, direction.Asc, direction.ErrInvalid},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			var actual order.Direction
+			var actual direction.Direction
 			err := json.Unmarshal([]byte(test.fixture), &actual)
 			assert.ErrorIs(t, err, test.err)
 			assert.Equal(t, test.expected, actual)

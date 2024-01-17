@@ -1,4 +1,4 @@
-package order
+package direction
 
 import (
 	"errors"
@@ -6,50 +6,51 @@ import (
 	"strings"
 )
 
-var ErrInvalidDirection = errors.New("invalid direction")
+var ErrInvalid = errors.New("invalid direction")
 
 // Direction is the enumeration for sort direction
 type Direction int
 
 const (
-	DirectionAsc Direction = iota
-	DirectionDesc
+	Asc Direction = iota
+	Desc
 )
 
-const defaultDirection = DirectionAsc
+// Default represents the default sort direction.
+const Default = Asc
 
 var directions = [...]string{
 	"ASC",
 	"DESC",
 }
 
-// ParseDirection parse a direction from a string.
-func ParseDirection(value string) (Direction, error) {
+// Parse a Direction from a string.
+func Parse(value string) (Direction, error) {
 	value = strings.ToUpper(value)
 	for i, v := range directions {
 		if v == value {
 			return Direction(i), nil
 		}
 	}
-	return DirectionAsc, fmt.Errorf("%w: value %q", ErrInvalidDirection, value)
+	return Asc, fmt.Errorf("%w: value %q", ErrInvalid, value)
 }
 
 // IsAscending returns whether the direction is ascending.
 func (d Direction) IsAscending() bool {
-	return d == DirectionAsc
+	return d == Asc
 }
 
 // IsDescending returns whether the direction is descending.
 func (d Direction) IsDescending() bool {
-	return d == DirectionDesc
+	return d == Desc
 }
 
 // Reverse the Direction.
 func (d Direction) Reverse() Direction {
-	if d == DirectionAsc {
-		return DirectionDesc
+	if d == Asc {
+		return Desc
 	}
-	return DirectionAsc
+	return Asc
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.
@@ -60,7 +61,7 @@ func (d Direction) MarshalText() ([]byte, error) {
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (d *Direction) UnmarshalText(text []byte) error {
 	var err error
-	*d, err = ParseDirection(string(text))
+	*d, err = Parse(string(text))
 	return err
 }
 

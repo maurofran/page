@@ -3,11 +3,12 @@ package sort
 import (
 	"encoding/json"
 	"github.com/maurofran/page/sort/order"
+	"github.com/maurofran/page/sort/order/direction"
 	"strings"
 )
 
 // Sort option for queries. You have to provide at least a list of properties to sort for that must not include
-// empty strings. The direction defaults to DirectionAsc.
+// empty strings. The direction defaults to Asc.
 type Sort struct {
 	orders []order.Order
 }
@@ -18,7 +19,7 @@ func Unsorted() *Sort {
 }
 
 // New creates a new Sort instance with supplied direction and properties.
-func New(direction order.Direction, properties ...string) *Sort {
+func New(direction direction.Direction, properties ...string) *Sort {
 	if len(properties) == 0 {
 		return Unsorted()
 	}
@@ -42,7 +43,7 @@ func Parse(values ...string) (*Sort, error) {
 }
 
 // By creates a new Sort with provided properties.
-func By(direction order.Direction, properties ...string) *Sort {
+func By(direction direction.Direction, properties ...string) *Sort {
 	return New(direction, properties...)
 }
 
@@ -53,15 +54,15 @@ func ByOrder(orders ...order.Order) *Sort {
 
 // Descending returns a new Sort with the current setup but descending order direction.
 func (s *Sort) Descending() *Sort {
-	return s.withDirection(order.DirectionDesc)
+	return s.withDirection(direction.Desc)
 }
 
 // Ascending returns a new Sort with the current setup but ascending order direction.
 func (s *Sort) Ascending() *Sort {
-	return s.withDirection(order.DirectionAsc)
+	return s.withDirection(direction.Asc)
 }
 
-func (s *Sort) withDirection(direction order.Direction) *Sort {
+func (s *Sort) withDirection(direction direction.Direction) *Sort {
 	orders := make([]order.Order, len(s.orders))
 	for i, o := range s.orders {
 		orders[i] = o.With(direction)
