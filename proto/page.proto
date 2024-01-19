@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package maurofran.page;
+
+option go_package = "github.com/maurofran/page/pb";
+
+import "google/protobuf/struct.proto";
+
+/**
+ * Page is a generic page with a generic content.
+ */
+message Page {
+  repeated google.protobuf.Struct content = 1;
+  PageInfo page_info = 2;
+}
+
+/**
+ * PageInfo is a message used to hold information about a requested page.
+ * It can be used in specific messages with specific content field or with the generic Page message.
+ */
+message PageInfo {
+  uint64 total_elements = 1;
+  uint64 total_pages = 2;
+  Request request = 3;
+}
+
+message Request {
+  uint32 page = 1;
+  uint32 size = 2;
+  Sort sort = 3;
+}
+
+message Sort {
+  repeated Order order = 1;
+}
+
+message Order {
+  string property = 1;
+  Direction direction = 2;
+  bool ignore_case = 3;
+  NullHandling null_handling = 4;
+}
+
+enum Direction {
+  ASC = 0;
+  DESC = 1;
+}
+
+enum NullHandling {
+  NATIVE = 0;
+  NULLS_FIRST = 1;
+  NULLS_LAST = 2;
+}
