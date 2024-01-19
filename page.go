@@ -8,14 +8,22 @@ import (
 	"reflect"
 )
 
-// EmptyUnpaged returns an empty unpaged page.
-func EmptyUnpaged[T any]() Page[T] {
-	return Empty[T](Unpaged())
-}
-
-// Empty returns an empty page with provided page Request.
-func Empty[T any](request Request) Page[T] {
-	return &page[T]{chunk[T]{}, 0}
+// Empty returns an empty page with provided (optional) page Request.
+// If more than one Request is provided, the first one will be used and the others ignored.
+func Empty[T any](request ...Request) Page[T] {
+	req := Unpaged()
+	if len(request) > 0 {
+		req = request[0]
+	}
+	page := &page[T]{
+		chunk: chunk[T]{
+			request: req,
+		},
+		totalElements: 0,
+	}
+	page.chunk.hasPrev = page.hasPrevious
+	page.chunk.hasNext = page.hasNext
+	return page
 }
 
 // Page is a sublist of a list of objects. It allows gain information about the position of it in the containing
@@ -35,7 +43,7 @@ type page[T any] struct {
 }
 
 // New creates new Page.
-func New[T any](content []T, request Request, totalElements uint) (Page[T], error) {
+func New[T any](content []T, request Request, totalElements uint) Page[T] {
 	if request != nil && len(content) > 0 && request.IsPaged() {
 		offset, _ := request.Offset()
 		size, _ := request.PageSize()
@@ -43,19 +51,21 @@ func New[T any](content []T, request Request, totalElements uint) (Page[T], erro
 			totalElements = offset + size
 		}
 	}
-	return &page[T]{
+	page := &page[T]{
 		chunk: chunk[T]{
 			content: content,
 			request: request,
 		},
 		totalElements: totalElements,
-	}, nil
+	}
+	page.chunk.hasPrev = page.hasPrevious
+	page.chunk.hasNext = page.hasNext
+	return page
 }
 
 // FromSlice creates an Unpaged Page with supplied content.
 func FromSlice[T any](content []T) Page[T] {
-	page, _ := New(content, Unpaged(), uint(len(content)))
-	return page
+	return New(content, Unpaged(), uint(len(content)))
 }
 
 func (p *page[T]) TotalPages() uint {
@@ -69,12 +79,12 @@ func (p *page[T]) TotalElements() uint {
 	return p.totalElements
 }
 
-func (p *page[T]) HasNext() bool {
-	return (p.Number() + 1) < p.TotalPages()
+func (p *page[T]) hasPrevious() bool {
+	return p.Number() > 0
 }
 
-func (p *page[T]) IsLast() bool {
-	return !p.HasNext()
+func (p *page[T]) hasNext() bool {
+	return (p.Number() + 1) < p.TotalPages()
 }
 
 type jsonPage[T any] struct {

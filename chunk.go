@@ -7,6 +7,8 @@ import (
 type chunk[T any] struct {
 	content []T
 	request Request
+	hasNext func() bool
+	hasPrev func() bool
 }
 
 func (c *chunk[T]) Number() uint {
@@ -50,11 +52,11 @@ func (c *chunk[T]) IsLast() bool {
 }
 
 func (c *chunk[T]) HasNext() bool {
-	panic("implement me")
+	return c.hasNext()
 }
 
 func (c *chunk[T]) HasPrevious() bool {
-	panic("implement me")
+	return c.hasPrev()
 }
 
 func (c *chunk[T]) Request() Request {
